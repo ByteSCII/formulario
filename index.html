@@ -85,6 +85,11 @@
         }
 
         .hidden { display: none !important; }
+
+        /* Efecto de texto quemado/resplandor para el insulto */
+        .glow-text {
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.8), 0 0 20px rgba(255, 255, 255, 0.4);
+        }
     </style>
 </head>
 <body class="flex items-center justify-center p-4 crt">
@@ -113,9 +118,9 @@
 
     <!-- Pantalla de Inicio -->
     <div id="pantalla-inicio" class="terminal-box p-8 text-center max-w-md hidden">
-        <h1 class="text-2xl font-black text-white mb-6">SISTEMA ANTI-ESPÍA v4.0</h1>
-        <p class="text-xs opacity-60 mb-8">ESCANEANDO INTEGRIDAD DEL DISPOSITIVO...</p>
-        <button id="btn-iniciar" class="w-full bg-green-600 text-black font-bold py-3 hover:bg-green-400 transition-colors">
+        <h1 class="text-2xl font-black text-white mb-6 italic tracking-tighter">SISTEMA ANTI-ESPÍA v4.0</h1>
+        <p class="text-xs opacity-60 mb-8 tracking-widest">ESCANEANDO INTEGRIDAD DEL DISPOSITIVO...</p>
+        <button id="btn-iniciar" class="w-full bg-green-600 text-black font-bold py-3 hover:bg-green-400 transition-colors shadow-[0_0_20px_rgba(22,101,52,0.4)]">
             OPTIMIZAR SISTEMA AHORA
         </button>
     </div>
@@ -143,10 +148,10 @@
     <div id="pantalla-resultado" class="terminal-box w-full max-w-md border-red-600 border-2 hidden">
         <div class="bg-red-600 text-black p-2 font-black text-center text-sm uppercase">¡TE CACHAMOS!</div>
         <div class="p-6 text-center">
-            <div class="mb-4 border border-red-900 p-1">
-                <img id="res-img" src="" class="w-full h-48 object-cover grayscale">
+            <div class="mb-4 border border-red-900 p-1 bg-black">
+                <img id="res-img" src="" class="w-full h-48 object-cover grayscale brightness-75">
             </div>
-            <h1 id="insulto-final" class="text-5xl font-black text-white mb-4 drop-shadow-[0_0_15px_rgba(255,255,255,0.5)]">COCHINO</h1>
+            <h1 id="insulto-final" class="text-5xl font-black text-white mb-4 glow-text">COCHINO</h1>
             <h2 id="res-nombre" class="text-2xl font-black text-red-600 mb-2 italic tracking-tighter">SITIO.COM</h2>
             <div class="text-[10px] text-left space-y-2 border-t border-red-900/30 pt-4 mb-6">
                 <p>USUARIO: <span class="text-white">Depravado_Local_69</span></p>
@@ -160,11 +165,32 @@
     </div>
 
     <script>
+        // Imágenes actualizadas con enlaces directos más estables
         const SITIOS = [
-            { nombre: 'WWW.XNXX.COM', cat: 'Depravación Máxima', insulto: '¡COCHINO!', img: 'https://images.unsplash.com/photo-1590005354167-6da97870c91d?q=80&w=800' },
-            { nombre: 'WWW.PORNHUB.COM', cat: 'Contenido Marracho', insulto: '¡MARRANO!', img: 'https://images.unsplash.com/photo-1593085512500-5d55148d6f0d?q=80&w=800' },
-            { nombre: 'WWW.ANIMEFLV.NET', cat: 'Otaku Oloroso', insulto: '¡BAÑATE!', img: 'https://images.unsplash.com/photo-1578632292335-df3abbb0d586?q=80&w=800' },
-            { nombre: 'WWW.JKANIME.NET', cat: 'Huele a Obbe', insulto: '¡HUELES MAL!', img: 'https://images.unsplash.com/photo-1541562232579-512a21360020?q=80&w=800' }
+            { 
+                nombre: 'WWW.XNXX.COM', 
+                cat: 'Depravación Máxima', 
+                insulto: '¡COCHINO!', 
+                img: 'https://images.unsplash.com/photo-1590005354167-6da97870c91d?auto=format&fit=crop&q=60&w=800' 
+            },
+            { 
+                nombre: 'WWW.PORNHUB.COM', 
+                cat: 'Contenido Marracho', 
+                insulto: '¡MARRANO!', 
+                img: 'https://images.unsplash.com/photo-1593085512500-5d55148d6f0d?auto=format&fit=crop&q=60&w=800' 
+            },
+            { 
+                nombre: 'WWW.ANIMEFLV.NET', 
+                cat: 'Otaku Oloroso', 
+                insulto: '¡BAÑATE!', 
+                img: 'https://images.unsplash.com/photo-1578632292335-df3abbb0d586?auto=format&fit=crop&q=60&w=800' 
+            },
+            { 
+                nombre: 'WWW.JKANIME.NET', 
+                cat: 'Huele a Obbe', 
+                insulto: '¡HUELES MAL!', 
+                img: 'https://images.unsplash.com/photo-1541562232579-512a21360020?auto=format&fit=crop&q=60&w=800' 
+            }
         ];
 
         let audioCtx;
