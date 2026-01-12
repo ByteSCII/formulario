@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SISTEMA DE SEGURIDAD - ESCANEO</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Roboto:wght@400;500&display=swap');
+
+        :root {
+            --green: #22c55e;
+            --red: #ef4444;
+        }
+
+        body {
+            background-color: #050505;
+            color: var(--green);
+            font-family: 'JetBrains Mono', monospace;
+            margin: 0;
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        /* Matrix Background */
+        #matrix-bg {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            opacity: 0.15;
+            z-index: 1;
+            pointer-events: none;
+            display: flex;
+            justify-content: space-around;
+        }
+
+        .matrix-column {
+            display: flex;
+            flex-direction: column;
+            font-size: 12px;
+            animation: move-down 10s linear infinite;
+        }
+
+        @keyframes move-down {
+            0% { transform: translateY(-100%); }
+            100% { transform: translateY(100%); }
+        }
+
+        /* Android Modal Estilo */
+        #android-modal {
+            font-family: 'Roboto', sans-serif;
+            background: #ffffff;
+            color: #000000;
+            border-radius: 28px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+            z-index: 200;
+        }
+
+        /* CRT Filter */
+        .crt::before {
+            content: " ";
+            display: block;
+            position: absolute;
+            top: 0; left: 0; bottom: 0; right: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.02), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.02));
+            z-index: 100;
+            background-size: 100% 3px, 3px 100%;
+            pointer-events: none;
+        }
+
+        #flash {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: white;
+            opacity: 0;
+            z-index: 150;
+            pointer-events: none;
+            transition: opacity 0.1s;
+        }
+
+        .terminal-box {
+            background: rgba(0, 0, 0, 0.9);
+            border: 1px solid #166534;
+            position: relative;
+            z-index: 10;
+        }
+
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body class="flex items-center justify-center p-4 crt">
+
+    <div id="matrix-bg"></div>
+    <div id="flash"></div>
+
+    <!-- Modal Falso de Android -->
+    <div id="android-container" class="fixed inset-0 bg-black/60 flex items-center justify-center z-[200]">
+        <div id="android-modal" class="w-[320px] p-6 animate-in zoom-in duration-300">
+            <div class="flex items-center gap-4 mb-4">
+                <div class="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-white">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/></svg>
+                </div>
+                <h2 class="text-xl font-medium">Servicios de Google</h2>
+            </div>
+            <p class="text-gray-600 text-[15px] leading-relaxed mb-8">
+                ¿Permitir que <b>Security Tracker</b> acceda al historial de navegación, registros de aplicaciones y caché de medios en este dispositivo?
+            </p>
+            <div class="flex justify-end gap-6 font-medium text-blue-700">
+                <button onclick="cerrarModal()" class="uppercase hover:bg-blue-50 px-2 py-1 rounded">DENEGAR</button>
+                <button onclick="cerrarModal()" class="uppercase hover:bg-blue-50 px-2 py-1 rounded">PERMITIR</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pantalla de Inicio -->
+    <div id="pantalla-inicio" class="terminal-box p-8 text-center max-w-md hidden">
+        <h1 class="text-2xl font-black text-white mb-6">SISTEMA ANTI-ESPÍA v4.0</h1>
+        <p class="text-xs opacity-60 mb-8">ESCANEANDO INTEGRIDAD DEL DISPOSITIVO...</p>
+        <button id="btn-iniciar" class="w-full bg-green-600 text-black font-bold py-3 hover:bg-green-400 transition-colors">
+            OPTIMIZAR SISTEMA AHORA
+        </button>
+    </div>
+
+    <!-- Terminal -->
+    <div id="pantalla-terminal" class="terminal-box w-full max-w-3xl p-6 hidden">
+        <div class="flex justify-between border-b border-green-900 pb-2 mb-4 text-[10px]">
+            <span class="animate-pulse">● BUSCANDO_PORQUERIAS_EN_CACHE</span>
+            <span id="reloj">00:00:00</span>
+        </div>
+        <div id="logs" class="h-96 overflow-y-auto text-xs space-y-1 scrollbar-hide"></div>
+        
+        <div id="progreso-zona" class="mt-6 hidden">
+            <div class="flex justify-between text-[10px] mb-1">
+                <span id="progreso-text">BUSCANDO PECADOS...</span>
+                <span id="progreso-num">0%</span>
+            </div>
+            <div class="w-full bg-green-900/30 h-1">
+                <div id="barra" class="h-full bg-green-500 transition-all duration-150"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Resultado -->
+    <div id="pantalla-resultado" class="terminal-box w-full max-w-md border-red-600 border-2 hidden">
+        <div class="bg-red-600 text-black p-2 font-black text-center text-sm uppercase">¡TE CACHAMOS!</div>
+        <div class="p-6 text-center">
+            <div class="mb-4 border border-red-900 p-1">
+                <img id="res-img" src="" class="w-full h-48 object-cover grayscale">
+            </div>
+            <h1 id="insulto-final" class="text-5xl font-black text-white mb-4 drop-shadow-[0_0_15px_rgba(255,255,255,0.5)]">COCHINO</h1>
+            <h2 id="res-nombre" class="text-2xl font-black text-red-600 mb-2 italic tracking-tighter">SITIO.COM</h2>
+            <div class="text-[10px] text-left space-y-2 border-t border-red-900/30 pt-4 mb-6">
+                <p>USUARIO: <span class="text-white">Depravado_Local_69</span></p>
+                <p>TIPO: <span id="res-cat" class="text-white">---</span></p>
+                <p>RIESGO: <span class="text-red-500 animate-bounce font-bold">¡VERGÜENZA PÚBLICA TOTAL!</span></p>
+            </div>
+            <button onclick="location.reload()" class="text-xs text-gray-500 underline hover:text-white transition-colors uppercase">
+                [ Borrar historial y pedir perdón ]
+            </button>
+        </div>
+    </div>
+
+    <script>
+        const SITIOS = [
+            { nombre: 'WWW.XNXX.COM', cat: 'Depravación Máxima', insulto: '¡COCHINO!', img: 'https://images.unsplash.com/photo-1590005354167-6da97870c91d?q=80&w=800' },
+            { nombre: 'WWW.PORNHUB.COM', cat: 'Contenido Marracho', insulto: '¡MARRANO!', img: 'https://images.unsplash.com/photo-1593085512500-5d55148d6f0d?q=80&w=800' },
+            { nombre: 'WWW.ANIMEFLV.NET', cat: 'Otaku Oloroso', insulto: '¡BAÑATE!', img: 'https://images.unsplash.com/photo-1578632292335-df3abbb0d586?q=80&w=800' },
+            { nombre: 'WWW.JKANIME.NET', cat: 'Huele a Obbe', insulto: '¡HUELES MAL!', img: 'https://images.unsplash.com/photo-1541562232579-512a21360020?q=80&w=800' }
+        ];
+
+        let audioCtx;
+        
+        function cerrarModal() {
+            sonarChistoso(440, 'triangle', 0.1);
+            document.getElementById('android-container').classList.add('hidden');
+            document.getElementById('pantalla-inicio').classList.remove('hidden');
+        }
+
+        // Fondo Matrix
+        const matrixBg = document.getElementById('matrix-bg');
+        for(let i=0; i<25; i++) {
+            const col = document.createElement('div');
+            col.className = 'matrix-column';
+            col.style.left = `${i*4}%`;
+            col.style.animationDelay = `${Math.random()*5}s`;
+            col.innerHTML = Array(40).fill(0).map(() => `<span>${Math.floor(Math.random()*2)}</span>`).join('');
+            matrixBg.appendChild(col);
+        }
+
+        function sonarChistoso(f, tipo='sine', d=0.05) {
+            if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            const osc = audioCtx.createOscillator();
+            const g = audioCtx.createGain();
+            osc.type = tipo;
+            osc.frequency.setValueAtTime(f, audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(f/2, audioCtx.currentTime + d);
+            g.gain.setValueAtTime(0.05, audioCtx.currentTime);
+            g.gain.linearRampToValueAtTime(0, audioCtx.currentTime + d);
+            osc.connect(g);
+            g.connect(audioCtx.destination);
+            osc.start();
+            osc.stop(audioCtx.currentTime + d);
+        }
+
+        function log(msg, t='n') {
+            const div = document.createElement('div');
+            const colors = { n: '', e: 'text-green-400 font-bold', w: 'text-yellow-400', err: 'text-red-500 font-bold' };
+            div.className = colors[t];
+            div.innerHTML = `<span class="opacity-50">root@exploit:~$</span> ${msg}`;
+            document.getElementById('logs').appendChild(div);
+            document.getElementById('logs').scrollTop = document.getElementById('logs').scrollHeight;
+            sonarChistoso(200 + Math.random()*800, 'square', 0.03);
+        }
+
+        async function progreso(txt, ms) {
+            const zona = document.getElementById('progreso-zona');
+            zona.classList.remove('hidden');
+            document.getElementById('progreso-text').innerText = txt;
+            for(let i=0; i<=100; i+=5) {
+                document.getElementById('barra').style.width = i+'%';
+                document.getElementById('progreso-num').innerText = i+'%';
+                sonarChistoso(400 + i*5, 'sine', 0.02);
+                await new Promise(r => setTimeout(r, ms/20));
+            }
+            zona.classList.add('hidden');
+        }
+
+        function flash() {
+            const f = document.getElementById('flash');
+            f.style.opacity = '0.4';
+            sonarChistoso(100, 'sawtooth', 0.2);
+            setTimeout(() => f.style.opacity = '0', 100);
+        }
+
+        document.getElementById('btn-iniciar').addEventListener('click', async () => {
+            document.getElementById('pantalla-inicio').classList.add('hidden');
+            document.getElementById('pantalla-terminal').classList.remove('hidden');
+
+            const comandos = [
+                {m: "Iniciando bypass de moralidad...", d: 600},
+                {m: "Analizando archivos .MP4 ocultos...", d: 800, t:'w'},
+                {m: "Escaneando historial de navegación nocturno...", d: 700},
+                {m: "¡UY! Detectando actividad sospechosa en Chrome...", d: 500, t:'err'},
+                {m: "Recuperando registros de incógnito (no sirvieron de nada)...", d: 900},
+                {m: "Buscando 'videos de tareas' que pesan 2GB...", d: 1100, t:'w'},
+                {m: "Accediendo a la carpeta de 'Anime'... (Huele raro aquí)", d: 1000},
+                {m: "Rastreando descargas de servidores piratas...", d: 600},
+                {m: "Vinculando gustos culposos con el perfil de usuario...", d: 1500, p: {t: "CALCULANDO NIVEL DE RAREZA", d: 2500}},
+                {m: "Error: Demasiadas cochinadas encontradas...", d: 400, t:'err'},
+                {m: "¡PÁGINA FINAL IDENTIFICADA!", d: 1000, t:'err'},
+                {m: "Preparando informe para enviar a tu mamá...", d: 1200, t:'e'}
+            ];
+
+            for(let c of comandos) {
+                log(c.m, c.t);
+                if(c.p) await progreso(c.p.t, c.p.d);
+                await new Promise(r => setTimeout(r, c.d));
+                if(Math.random() > 0.7) flash();
+            }
+
+            flash();
+            const s = SITIOS[Math.floor(Math.random()*SITIOS.length)];
+            document.getElementById('res-img').src = s.img;
+            document.getElementById('res-nombre').innerText = s.nombre;
+            document.getElementById('res-cat').innerText = s.cat;
+            document.getElementById('insulto-final').innerText = s.insulto;
+
+            document.getElementById('pantalla-terminal').classList.add('hidden');
+            document.getElementById('pantalla-resultado').classList.remove('hidden');
+        });
+
+        // Reloj simulado
+        setInterval(() => {
+            const n = new Date();
+            document.getElementById('reloj').innerText = n.toLocaleTimeString();
+        }, 1000);
+    </script>
+</body>
+</html>
